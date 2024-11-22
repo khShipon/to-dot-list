@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List App</title>
+    <style>
+        :root {
+            --primary-color: #4CAF50;
+            --bg-color: #e8f5e9;
+            --text-color: #333333;
+            --completed-color: #888888;
+            --gradient-start: #4CAF50;
+            --gradient-end: #45a049;
+        }
+
+        .dark-mode {
+            --primary-color: #45a049;
+            --bg-color: #1b5e20;
+            --text-color: #ffffff;
+            --completed-color: #aaaaaa;
+            --gradient-start: #2c662f;
+            --gradient-end: #1e4620;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, var(--bg-color), #ffffff);
+            min-height: 100vh;
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 2rem auto;
+            padding: 1rem;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .todo-input {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 0.5rem;
+            font-size: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        button {
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .todo-list {
+            list-style: none;
+        }
+
+        .todo-item {
+            display: flex;
+            align-items: center;
+            padding: 0.8rem;
+            margin-bottom: 0.8rem;
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            border-radius: 8px;
+            color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+
+        .todo-item:hover {
+            transform: translateX(5px);
+        }
+
+        .todo-item.completed {
+            background: linear-gradient(135deg, #808080, #666666);
+            opacity: 0.8;
+        }
+
+        .todo-item button {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+
+        .todo-item button:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .todo-item.completed span {
+            text-decoration: line-through;
+            color: var(--completed-color);
+        }
+
+        .todo-item span {
+            flex: 1;
+            margin: 0 1rem;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+            gap: 1rem;
+        }
+
+        .theme-toggle {
+            background-color: #666;
+        }
+
+        .stats {
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                margin: 1rem;
+                padding: 0.5rem;
+            }
+
+            .todo-input {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+
+        .profile-container {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .username-section {
+            margin-top: 1rem;
+            position: relative;
+            display: inline-block;
+        }
+
+        .username {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--text-color);
+            margin: 0.5rem 0;
+            display: inline-block;
+            padding: 0.2rem 1.5rem 0.2rem 0.5rem;
+            cursor: pointer;
+        }
+
+        .edit-icon {
+            width: 16px;
+            height: 16px;
+            fill: var(--text-color);
+            opacity: 0.6;
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+        }
+
+        .username-input {
+            font-size: 1.5rem;
+            padding: 0.2rem 0.5rem;
+            border: 1px solid var(--primary-color);
+            border-radius: 4px;
+            background: var(--bg-color);
+            color: var(--text-color);
+            display: none;
+        }
+
+        .profile-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: var(--bg-color);
+            border: 1px solid var(--primary-color);
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: none;
+            z-index: 100;
+        }
+
+        .profile-menu.active {
+            display: block;
+        }
+
+        .profile-menu button {
+            display: block;
+            width: 100%;
+            padding: 0.5rem 1rem;
+            text-align: left;
+            background: none;
+            border: none;
+            color: var(--text-color);
+            cursor: pointer;
+        }
+
+        .profile-menu button:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .settings-icon {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 24px;
+            height: 24px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            padding: 4px;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .profile-section {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .profile-picture {
+            width: 150px;
+            height: 150px;
+            border: 4px solid var(--primary-color);
+            border-radius: 300px;
+            margin-bottom: 1rem;
+            object-fit: cover;
+            cursor: pointer;
+            transition: transform 0.3s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .profile-picture:hover {
+            transform: scale(1.05);
+        }
+
+        .check-icon {
+            width: 16px;
+            height: 16px;
+            fill: var(--primary-color);
+            position: absolute;
+            right: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .username.set {
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="profile-section">
+            <img src="default-avatar.png" alt="Profile Picture" id="profilePic" class="profile-picture">
+            <input type="file" id="profileInput" accept="image/*" style="display: none;">
+            <div class="username-section">
+                <span id="username" class="username">User</span>
+                <div style="position: relative; display: inline-block;">
+                    <input type="text" id="usernameInput" class="username-input" placeholder="Enter username" onblur="updateUsername()" oninput="showCheckmark(this.value)">
+                    <svg id="checkIcon" class="check-icon" viewBox="0 0 24 24" style="display: none;">
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                    </svg>
+                </div>
+                <svg id="editIcon" class="edit-icon" viewBox="0 0 24 24">
+                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                </svg>
+            </div>
+            <div id="profileMenu" class="profile-menu">
+                <button onclick="logout()">Logout</button>
+                <button onclick="deleteAccount()">Delete Account</button>
+            </div>
+        </div>
+        <h1>To-Do List</h1>
+        <div class="todo-input">
+            <input type="text" id="taskInput" placeholder="Enter a new task...">
+            <button onclick="addTask()">Add Task</button>
+        </div>
+        <ul id="todoList" class="todo-list"></ul>
+        <div class="controls">
+            <button onclick="clearAll()">Clear All</button>
+            <div class="stats">Success Rate: <span id="successRate">0%</span></div>
+            <button class="theme-toggle" onclick="toggleTheme()">Toggle Dark Mode</button>
+        </div>
+    </div>
+
+    <script>
+        let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+        const REMINDER_DELAY = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+        function calculateSuccessRate() {
+            if (tasks.length === 0) return '0%';
+            const completedTasks = tasks.filter(task => task.completed).length;
+            const rate = (completedTasks / tasks.length) * 100;
+            return `${Math.round(rate)}%`;
+        }
+
+        function updateSuccessRate() {
+            document.getElementById('successRate').textContent = calculateSuccessRate();
+        }
+
+        function checkOverdueTasks() {
+            const now = new Date().getTime();
+            tasks.forEach(task => {
+                if (!task.completed && task.timestamp) {
+                    const taskDate = new Date(task.timestamp).getTime();
+                    if (now - taskDate >= REMINDER_DELAY) {
+                        alert(`Reminder: The task "${task.text}" is still incomplete!`);
+                    }
+                }
+            });
+        }
+
+        function saveTasks() {
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+        }
+
+        function renderTasks() {
+            const todoList = document.getElementById('todoList');
+            todoList.innerHTML = '';
+            
+            tasks.forEach((task, index) => {
+                const li = document.createElement('li');
+                li.className = `todo-item ${task.completed ? 'completed' : ''}`;
+                li.innerHTML = `
+                    <input type="checkbox" ${task.completed ? 'checked' : ''} 
+                           onclick="toggleTask(${index})">
+                    <span>${task.text}</span>
+                    <span style="color: #000000; text-align: center; flex: 0.5;">
+                        ${task.timestamp || 'No date'}
+                    </span>
+                    <button onclick="deleteTask(${index})">Delete</button>
+                `;
+                todoList.appendChild(li);
+            });
+        }
+
+        function addTask() {
+            const input = document.getElementById('taskInput');
+            const text = input.value.trim();
+            
+            if (text) {
+                tasks.push({ 
+                    text, 
+                    completed: false,
+                    timestamp: new Date().toLocaleString()
+                });
+                input.value = '';
+                saveTasks();
+                renderTasks();
+                updateSuccessRate();
+            }
+        }
+
+        function toggleTask(index) {
+            tasks[index].completed = !tasks[index].completed;
+            saveTasks();
+            renderTasks();
+            updateSuccessRate();
+        }
+
+        function deleteTask(index) {
+            tasks.splice(index, 1);
+            saveTasks();
+            renderTasks();
+            updateSuccessRate();
+        }
+
+        function clearAll() {
+            tasks = [];
+            saveTasks();
+            renderTasks();
+            updateSuccessRate();
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+        }
+
+        // Event listener for Enter key
+        document.getElementById('taskInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addTask();
+            }
+        });
+
+        // Set up periodic checks for overdue tasks
+        setInterval(checkOverdueTasks, 60 * 60 * 1000); // Check every hour
+        // Initial checks
+        renderTasks();
+        updateSuccessRate();
+        checkOverdueTasks();
+
+        const username = document.getElementById('username');
+        const usernameInput = document.getElementById('usernameInput');
+        const profileMenu = document.getElementById('profileMenu');
+        const editIcon = document.getElementById('editIcon');
+
+        username.addEventListener('click', function() {
+            usernameInput.style.display = 'block';
+            editIcon.style.display = 'none';
+        });
+
+        usernameInput.addEventListener('blur', function() {
+            usernameInput.style.display = 'none';
+            editIcon.style.display = 'block';
+        });
+
+        editIcon.addEventListener('click', function() {
+            usernameInput.style.display = 'block';
+            editIcon.style.display = 'none';
+        });
+
+        usernameInput.addEventListener('blur', function() {
+            usernameInput.style.display = 'none';
+            editIcon.style.display = 'block';
+        });
+
+        profileMenu.addEventListener('click', function(event) {
+            event.stopPropagation();
+            profileMenu.classList.toggle('active');
+        });
+
+        document.addEventListener('click', function() {
+            profileMenu.classList.remove('active');
+        });
+
+        document.getElementById('profilePic').addEventListener('click', function() {
+            document.getElementById('profileInput').click();
+        });
+
+        document.getElementById('profileInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('profilePic').src = e.target.result;
+                    // Save profile picture to localStorage
+                    localStorage.setItem('profilePicture', e.target.result);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Load profile picture on page load
+        window.addEventListener('load', function() {
+            const savedProfilePic = localStorage.getItem('profilePicture');
+            const savedUsername = localStorage.getItem('username');
+            if (savedProfilePic) {
+                document.getElementById('profilePic').src = savedProfilePic;
+            }
+            if (savedUsername) {
+                document.getElementById('username').textContent = savedUsername;
+            }
+        });
+
+        function updateUsername() {
+            const username = document.getElementById('username');
+            const usernameInput = document.getElementById('usernameInput');
+            const checkIcon = document.getElementById('checkIcon');
+            
+            if (usernameInput.value.trim() !== '') {
+                username.textContent = usernameInput.value;
+                username.classList.add('set');
+                localStorage.setItem('username', usernameInput.value);
+                checkIcon.style.display = 'block';
+                setTimeout(() => {
+                    checkIcon.style.display = 'none';
+                }, 2000);
+            }
+            usernameInput.style.display = 'none';
+            editIcon.style.display = 'block';
+        }
+
+        function showCheckmark(value) {
+            const checkIcon = document.getElementById('checkIcon');
+            checkIcon.style.display = value.trim() !== '' ? 'block' : 'none';
+        }
+    </script>
+</body>
+</html>
